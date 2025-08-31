@@ -413,3 +413,17 @@ The Nen ecosystem provides:
 - **Seamless Integration**: Works perfectly with NenCache, NenDB, nen-io, and nen-json
 
 **Build AI workflows that scale to infinity with confidence!** ✨
+
+---
+
+## 🌐 Nen Ecosystem Integration
+
+**Nen** is part of the larger Nen ecosystem, designed to work seamlessly with:
+
+- **[nen-db](https://github.com/Nen-Co/nen-db)**: High-performance graph database
+- **[nen-net](https://github.com/Nen-Co/nen-net)**: Zero-allocation networking
+- **[nen-io](https://github.com/Nen-Co/nen-io)**: High-performance I/O operations
+- **[nen-json](https://github.com/Nen-Co/nen-json)**: Fast JSON processing
+- **[nen-cli](https://github.com/Nen-Co/nen-cli)**: Unified command-line interface
+
+Visit our comprehensive documentation at [nen-co.github.io/docs](https://nen-co.github.io/docs)
