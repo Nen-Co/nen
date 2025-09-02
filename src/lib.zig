@@ -73,6 +73,8 @@ pub const Flow = struct {
 pub const FlowStats = struct {
     total_nodes: u32,
     completed_nodes: u32,
+    failed_nodes: u32 = 0,
+    cache_hit_rate: f32 = 0.0,
     
     pub fn getSuccessRate(self: *const FlowStats) f32 {
         if (self.total_nodes == 0) return 0.0;
@@ -115,8 +117,8 @@ pub fn createWorkflowFlow(allocator: std.mem.Allocator, steps: []const []const u
 // Export for C bindings
 // Export for C bindings
 export fn nen_create_agent_flow(allocator: *anyopaque, name: [*:0]const u8, instructions: [*:0]const u8) *anyopaque {
-    const alloc = @ptrCast(std.mem.Allocator, allocator);
-    const flow = createAgentFlow(alloc, std.mem.span(name), std.mem.span(instructions)) catch return null;
+    const alloc = @ptrCast(*std.mem.Allocator, allocator);
+    const flow = createAgentFlow(alloc.*, std.mem.span(name), std.mem.span(instructions)) catch return null;
     return flow;
 }
 
@@ -129,5 +131,5 @@ export fn nen_execute_flow(flow: *anyopaque) c_int {
 export fn nen_get_flow_stats(flow: *anyopaque) *anyopaque {
     const f = @ptrCast(*Flow, flow);
     const stats = f.getStats();
-    return &stats;
+    return @constCast(&stats);
 }

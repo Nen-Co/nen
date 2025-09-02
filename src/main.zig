@@ -124,7 +124,7 @@ fn runAgent(args: []const []const u8) !void {
     const allocator = std.heap.page_allocator;
     
     // Create and run agent flow
-    var flow = try nenflow.createAgentFlow(allocator, "NenFlow Agent", instructions);
+    var flow = try nen.createAgentFlow(allocator, "NenFlow Agent", instructions);
     defer flow.deinit();
     
     try stdout.writeAll("🚀 Executing agent flow...\n");
@@ -169,7 +169,7 @@ fn runRAG(args: []const []const u8) !void {
     const allocator = std.heap.page_allocator;
     
     // Create and run RAG flow
-    var flow = try nenflow.createRAGFlow(allocator, query);
+    var flow = try nen.createRAGFlow(allocator, query);
     defer flow.deinit();
     
     try stdout.writeAll("🚀 Executing RAG workflow...\n");
@@ -214,10 +214,10 @@ fn runWorkflow(args: []const []const u8) !void {
     }
     try stdout.writeAll("\n");
     
-    const allocator = std.heap.page_allocator();
+    const allocator = std.heap.page_allocator;
     
     // Create and run workflow flow
-    var flow = try nenflow.createWorkflowFlow(allocator, args);
+    var flow = try nen.createWorkflowFlow(allocator, args);
     defer flow.deinit();
     
     try stdout.writeAll("🚀 Executing workflow...\n");
@@ -256,7 +256,7 @@ fn runBenchmark() !void {
     
     // Run multiple flows for benchmarking
     for (0..iterations) |i| {
-        var flow = try nenflow.createAgentFlow(allocator, "Benchmark Agent", "Execute quickly for performance testing");
+        var flow = try nen.createAgentFlow(allocator, "Benchmark Agent", "Execute quickly for performance testing");
         defer flow.deinit();
         
         try flow.execute();
