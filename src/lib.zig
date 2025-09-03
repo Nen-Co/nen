@@ -14,7 +14,7 @@ pub const Node = struct {
     node_type: NodeType,
     state: NodeState,
     data: []const u8,
-    
+
     pub fn init(id: []const u8, node_type: NodeType) Node {
         return Node{
             .id = id,
@@ -29,34 +29,34 @@ pub const Node = struct {
 pub const Flow = struct {
     allocator: std.mem.Allocator,
     nodes: std.ArrayList(*Node),
-    
+
     pub fn init(allocator: std.mem.Allocator) !*Flow {
         const flow = try allocator.create(Flow);
         flow.* = Flow{
             .allocator = allocator,
-            .nodes = std.ArrayList(*Node).init(allocator),
+            .nodes = try std.ArrayList(*Node).initCapacity(allocator, 10),
         };
         return flow;
     }
-    
+
     pub fn deinit(self: *Flow) void {
-        self.nodes.deinit();
+        self.nodes.deinit(self.allocator);
         self.allocator.destroy(self);
     }
-    
+
     pub fn addNode(self: *Flow, node: *Node) !void {
-        try self.nodes.append(node);
+        try self.nodes.append(self.allocator, node);
     }
-    
+
     pub fn execute(self: *Flow) !void {
         for (self.nodes.items) |node| {
             node.state = .running;
             // Simulate execution
-            std.time.sleep(1000); // 1μs
+            std.Thread.sleep(1000); // 1μs
             node.state = .completed;
         }
     }
-    
+
     pub fn getStats(self: *Flow) FlowStats {
         var completed: u32 = 0;
         for (self.nodes.items) |node| {
@@ -75,7 +75,7 @@ pub const FlowStats = struct {
     completed_nodes: u32,
     failed_nodes: u32 = 0,
     cache_hit_rate: f32 = 0.0,
-    
+
     pub fn getSuccessRate(self: *const FlowStats) f32 {
         if (self.total_nodes == 0) return 0.0;
         return @as(f32, @floatFromInt(self.completed_nodes)) / @as(f32, @floatFromInt(self.total_nodes));
@@ -116,20 +116,20 @@ pub fn createWorkflowFlow(allocator: std.mem.Allocator, steps: []const []const u
 // Export for C bindings
 // Export for C bindings
 // Export for C bindings
-export fn nen_create_agent_flow(allocator: *anyopaque, name: [*:0]const u8, instructions: [*:0]const u8) *anyopaque {
-    const alloc = @ptrCast(*std.mem.Allocator, allocator);
+export fn nen_create_agent_flow(allocator: *anyopaque, name: [*:0]const u8, instructions: [*:0]const u8) ?*anyopaque {
+    const alloc = @as(*std.mem.Allocator, @ptrCast(@alignCast(allocator)));
     const flow = createAgentFlow(alloc.*, std.mem.span(name), std.mem.span(instructions)) catch return null;
     return flow;
 }
 
 export fn nen_execute_flow(flow: *anyopaque) c_int {
-    const f = @ptrCast(*Flow, flow);
+    const f = @as(*Flow, @ptrCast(@alignCast(flow)));
     f.execute() catch return -1;
     return 0;
 }
 
 export fn nen_get_flow_stats(flow: *anyopaque) *anyopaque {
-    const f = @ptrCast(*Flow, flow);
+    const f = @as(*Flow, @ptrCast(@alignCast(flow)));
     const stats = f.getStats();
     return @constCast(&stats);
 }

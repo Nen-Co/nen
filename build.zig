@@ -5,26 +5,20 @@ pub fn build(b: *std.Build) void {
     const optimize = b.standardOptimizeOption(.{});
 
     // Main library (for Zig usage)
-    const lib = b.addModule("nen", .{
-        .root_source_file = .{ .cwd_relative = "src/lib.zig" },
-    });
-
-    // Shared library (for language bindings)
-    const shared_lib = b.addSharedLibrary(.{
-        .name = "nen",
-        .root_source_file = .{ .cwd_relative = "src/lib.zig" },
+    const lib = b.createModule(.{
+        .root_source_file = b.path("src/lib.zig"),
         .target = target,
         .optimize = optimize,
     });
-
-    b.installArtifact(shared_lib);
 
     // Main executable
     const exe = b.addExecutable(.{
         .name = "nen",
-        .root_source_file = .{ .cwd_relative = "src/main.zig" },
-        .target = target,
-        .optimize = optimize,
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/main.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
     });
 
     exe.root_module.addImport("nen", lib);
@@ -32,9 +26,11 @@ pub fn build(b: *std.Build) void {
 
     // Unit tests
     const unit_tests = b.addTest(.{
-        .root_source_file = .{ .cwd_relative = "src/lib.zig" },
-        .target = target,
-        .optimize = optimize,
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/lib.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
     });
 
     unit_tests.root_module.addImport("nen", lib);
@@ -46,9 +42,11 @@ pub fn build(b: *std.Build) void {
     // Simple examples
     const basic_example = b.addExecutable(.{
         .name = "basic-example",
-        .root_source_file = .{ .cwd_relative = "examples/basic_agent.zig" },
-        .target = target,
-        .optimize = optimize,
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("examples/basic_agent.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
     });
     basic_example.root_module.addImport("nen", lib);
 

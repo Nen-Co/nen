@@ -150,7 +150,7 @@ parallel_node.* = nen.Node.init("parallel_tasks", .parallel, .text);
     try stdout.print("   ⚡ {d} flows executed in {d} ns\n", .{benchmark_iterations, duration_ns});
     try stdout.print("   ⚡ Duration: {d:.2} ms\n", .{@as(f64, @floatFromInt(duration_ns)) / 1_000_000.0});
     try stdout.print("   ⚡ Throughput: {d:.0} flows/sec\n", .{@as(f64, @floatFromInt(benchmark_iterations)) / (@as(f64, @floatFromInt(duration_ns)) / 1_000_000_000.0)});
-    try stdout.print("   ⚡ Average per flow: {d:.2} μs\n", .{@as(f64, @floatFromInt(duration_ns)) / (@as(f64, @floatFromInt(benchmark_iterations)) / 1_000.0});
+    try stdout.print("   ⚡ Average per flow: {d:.2} μs\n", .{@as(f64, @floatFromInt(duration_ns)) / (@as(f64, @floatFromInt(benchmark_iterations)) / 1_000.0)});
     
     // Demo 6: Memory and Caching Integration
     try stdout.writeAll("\n6️⃣ Memory and Caching Integration\n");

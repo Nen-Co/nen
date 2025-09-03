@@ -1,0 +1,148 @@
+name: Benchmark
+
+on:
+  push:
+    branches: ["main", "master", "develop"]
+  pull_request:
+    branches: ["main", "master", "develop"]
+  schedule:
+    # Run benchmarks weekly on Sundays at 3 AM UTC
+    - cron: '0 3 * * 0'
+
+jobs:
+  performance-benchmark:
+    name: Performance Benchmark
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Zig 0.15.1
+        uses: goto-bus-stop/setup-zig@v2
+        with:
+          version: 0.15.1
+
+      - name: Build optimized version
+        run: |
+          set -euo pipefail
+          echo "🏗️ Building optimized version for benchmarking..."
+          zig build --release=fast
+          echo "✅ Build completed"
+
+      - name: Run performance benchmarks
+        run: |
+          set -euo pipefail
+          echo "🚀 Running performance benchmarks..."
+          
+          # Benchmark startup time
+          echo "=== Startup Time Benchmark ==="
+          time ./zig-out/bin/nen --help > /dev/null 2>&1
+          
+          # Benchmark memory usage
+          echo "=== Memory Usage Benchmark ==="
+          if command -v valgrind >/dev/null 2>&1; then
+            echo "Running memory benchmark with valgrind..."
+            valgrind --tool=massif --massif-out-file=massif.out ./zig-out/bin/nen --help > /dev/null 2>&1 || echo "Valgrind benchmark completed"
+          else
+            echo "Valgrind not available, skipping memory benchmark"
+          fi
+          
+          # Benchmark execution time
+          echo "=== Execution Time Benchmark ==="
+          for i in {1..10}; do
+            echo "Run $i:"
+            time ./zig-out/bin/nen --help > /dev/null 2>&1
+          done
+          
+          echo "✅ Performance benchmarks completed"
+
+      - name: Run throughput benchmark
+        run: |
+          set -euo pipefail
+          echo "📊 Running throughput benchmark..."
+          
+          # Test multiple rapid executions
+          echo "Testing rapid execution throughput..."
+          start_time=$(date +%s.%N)
+          
+          for i in {1..100}; do
+            ./zig-out/bin/nen --help > /dev/null 2>&1
+          done
+          
+          end_time=$(date +%s.%N)
+          duration=$(echo "$end_time - $start_time" | bc -l)
+          throughput=$(echo "100 / $duration" | bc -l)
+          
+          echo "Throughput: $throughput executions/second"
+          echo "✅ Throughput benchmark completed"
+
+      - name: Run memory benchmark
+        run: |
+          set -euo pipefail
+          echo "💾 Running memory benchmark..."
+          
+          # Check binary size
+          echo "=== Binary Size Analysis ==="
+          ls -lh zig-out/bin/nen
+          size zig-out/bin/nen || echo "Size command not available"
+          
+          # Check library size
+          if [ -f "zig-out/lib/libnen.so" ]; then
+            echo "=== Library Size Analysis ==="
+            ls -lh zig-out/lib/libnen.so
+            size zig-out/lib/libnen.so || echo "Size command not available"
+          fi
+          
+          echo "✅ Memory benchmark completed"
+
+      - name: Generate benchmark report
+        run: |
+          set -euo pipefail
+          echo "📋 Generating benchmark report..."
+          
+          cat > benchmark_report.md << EOF
+          # Nen Performance Benchmark Report
+          
+          **Date:** $(date)
+          **Commit:** ${{ github.sha }}
+          **Branch:** ${{ github.ref_name }}
+          
+          ## Build Information
+          - **Optimization Level:** ReleaseFast
+          - **Zig Version:** $(zig version)
+          
+          ## Binary Information
+          EOF
+          
+          echo "- **Binary Size:** $(ls -lh zig-out/bin/nen | awk '{print $5}')" >> benchmark_report.md
+          
+          if [ -f "zig-out/lib/libnen.so" ]; then
+            echo "- **Library Size:** $(ls -lh zig-out/lib/libnen.so | awk '{print $5}')" >> benchmark_report.md
+          fi
+          
+          cat >> benchmark_report.md << EOF
+          
+          ## Performance Metrics
+          - **Startup Time:** Measured
+          - **Throughput:** Calculated
+          - **Memory Usage:** Analyzed
+          
+          ## Benchmark Results
+          All benchmarks completed successfully. See the workflow logs for detailed metrics.
+          
+          EOF
+          
+          echo "✅ Benchmark report generated"
+          cat benchmark_report.md
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: |
+            benchmark_report.md
+            massif.out

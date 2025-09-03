@@ -1,0 +1,42 @@
+name: Format Check
+
+on:
+  push:
+    branches: ["main", "master", "develop"]
+  pull_request:
+    branches: ["main", "master", "develop"]
+
+jobs:
+  format-check:
+    name: Format Check
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Zig 0.15.1
+        uses: goto-bus-stop/setup-zig@v2
+        with:
+          version: 0.15.1
+
+      - name: Check Zig formatting
+        run: |
+          set -euo pipefail
+          echo "Checking Zig code formatting..."
+          zig fmt --check .
+          echo "✅ All code is properly formatted"
+
+      - name: Check for formatting issues
+        run: |
+          set -euo pipefail
+          echo "Running additional format checks..."
+          # Check for consistent line endings
+          if command -v dos2unix >/dev/null 2>&1; then
+            echo "Checking line endings..."
+            find . -name "*.zig" -exec file {} \; | grep -v "LF" || echo "✅ All files have LF line endings"
+          fi
+          echo "✅ Format check completed successfully"

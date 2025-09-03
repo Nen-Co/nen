@@ -1,0 +1,139 @@
+name: Security
+
+on:
+  push:
+    branches: ["main", "master", "develop"]
+  pull_request:
+    branches: ["main", "master", "develop"]
+  schedule:
+    # Run security checks daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+jobs:
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Zig 0.15.1
+        uses: goto-bus-stop/setup-zig@v2
+        with:
+          version: 0.15.1
+
+      - name: Run security checks
+        run: |
+          set -euo pipefail
+          echo "🔍 Running security checks..."
+          
+          # Check for common security issues in Zig code
+          echo "Checking for potential security issues..."
+          
+          # Check for unsafe operations
+          if grep -r "unsafe" src/ examples/ 2>/dev/null; then
+            echo "⚠️  Found 'unsafe' operations - review for security implications"
+          else
+            echo "✅ No unsafe operations found"
+          fi
+          
+          # Check for hardcoded secrets (basic check)
+          if grep -r -i "password\|secret\|key\|token" src/ examples/ 2>/dev/null | grep -v "// TODO\|// FIXME\|// NOTE"; then
+            echo "⚠️  Potential hardcoded secrets found - review manually"
+          else
+            echo "✅ No obvious hardcoded secrets found"
+          fi
+          
+          # Check for buffer overflow risks
+          if grep -r "\[.*\]" src/ examples/ 2>/dev/null | grep -v "//"; then
+            echo "ℹ️  Array operations found - ensure bounds checking"
+          fi
+          
+          echo "✅ Security scan completed"
+
+      - name: Check for vulnerabilities in dependencies
+        run: |
+          set -euo pipefail
+          echo "🔍 Checking for dependency vulnerabilities..."
+          
+          # Since Nen is designed to be zero-dependency, check for any external dependencies
+          if [ -f "build.zig" ]; then
+            echo "Checking build.zig for external dependencies..."
+            if grep -q "addModule\|addPackage" build.zig; then
+              echo "ℹ️  External dependencies found - ensure they are secure"
+            else
+              echo "✅ No external dependencies found (zero-dependency design maintained)"
+            fi
+          fi
+          
+          echo "✅ Dependency check completed"
+
+      - name: Code quality security check
+        run: |
+          set -euo pipefail
+          echo "🔍 Running code quality security checks..."
+          
+          # Build and test to ensure no runtime security issues
+          zig build test
+          echo "✅ Build and test completed successfully"
+          
+          # Check for memory safety issues
+          echo "Checking for memory safety patterns..."
+          if grep -r "allocator\|deinit\|free" src/ 2>/dev/null; then
+            echo "ℹ️  Memory management code found - ensure proper cleanup"
+          fi
+          
+          echo "✅ Code quality security check completed"
+
+  dependency-audit:
+    name: Dependency Audit
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Zig 0.15.1
+        uses: goto-bus-stop/setup-zig@v2
+        with:
+          version: 0.15.1
+
+      - name: Audit Zig standard library usage
+        run: |
+          set -euo pipefail
+          echo "🔍 Auditing Zig standard library usage..."
+          
+          # Check for potentially unsafe standard library functions
+          echo "Checking for potentially unsafe std library usage..."
+          
+          # List of functions to check for
+          unsafe_functions=("memcpy" "memset" "strcpy" "strcat" "sprintf" "gets")
+          
+          for func in "${unsafe_functions[@]}"; do
+            if grep -r "$func" src/ examples/ 2>/dev/null; then
+              echo "⚠️  Found potentially unsafe function: $func"
+            fi
+          done
+          
+          echo "✅ Standard library audit completed"
+
+      - name: Check for license compliance
+        run: |
+          set -euo pipefail
+          echo "🔍 Checking license compliance..."
+          
+          if [ -f "LICENSE" ]; then
+            echo "✅ LICENSE file found"
+            head -5 LICENSE
+          else
+            echo "⚠️  No LICENSE file found"
+          fi
+          
+          echo "✅ License compliance check completed"
