@@ -4,6 +4,12 @@
 
 const std = @import("std");
 
+// Data-Oriented Design (DOD) modules
+pub const dod_config = @import("dod_config.zig");
+pub const dod_layout = @import("dod_layout.zig");
+pub const dod_prefetch = @import("dod_prefetch.zig");
+pub const dod_simd = @import("dod_simd.zig");
+
 // Core types - just the essentials
 pub const NodeType = enum { agent, tool, llm, memory, workflow, rag };
 pub const NodeState = enum { pending, running, completed, failed };

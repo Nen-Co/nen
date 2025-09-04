@@ -3,8 +3,9 @@
 [![Zig Version](https://img.shields.io/badge/Zig-0.14.1+-orange.svg)](https://ziglang.org/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen.svg)](https://github.com/Nen-Co/nen)
+[![DOD](https://img.shields.io/badge/Architecture-Data--Oriented--Design-FF6B6B)](docs/DATA_ORIENTED_DESIGN.md)
 
-**Nen** is a minimalist LLM framework built in Zig following the Nen way: statically typed, zero-allocation, and using the Nen ecosystem for maximum performance: designed for production-scale AI workflows.
+**Nen** is a minimalist LLM framework built in Zig following the Nen way: statically typed, zero-allocation, and using **Data-Oriented Design (DOD)** with the Nen ecosystem for maximum performance: designed for production-scale AI workflows.
 
 ## 🌟 Why Nen?
 

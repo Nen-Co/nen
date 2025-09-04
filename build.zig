@@ -54,9 +54,25 @@ pub fn build(b: *std.Build) void {
     const basic_example_step = b.step("basic-example", "Run basic agent example");
     basic_example_step.dependOn(&run_basic_example.step);
 
+    // DOD Demo
+    const dod_demo = b.addExecutable(.{
+        .name = "dod-demo",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("examples/dod_demo.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    dod_demo.root_module.addImport("nen", lib);
+
+    const run_dod_demo = b.addRunArtifact(dod_demo);
+    const dod_demo_step = b.step("dod-demo", "Run Data-Oriented Design demo");
+    dod_demo_step.dependOn(&run_dod_demo.step);
+
     // All examples step
     const examples_step = b.step("examples", "Run all examples");
     examples_step.dependOn(basic_example_step);
+    examples_step.dependOn(dod_demo_step);
 
     // Development step
     const dev_step = b.step("dev", "Run development tools");
