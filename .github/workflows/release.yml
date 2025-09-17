@@ -78,7 +78,11 @@ jobs:
         run: |
           cd release
           if [ "${{ matrix.archive }}" = "zip" ]; then
-            zip -r nen-${{ steps.version.outputs.VERSION }}-${{ matrix.platform }}-${{ matrix.arch }}.zip ${{ matrix.platform }}-${{ matrix.arch }}
+            if [ "${{ matrix.os }}" = "windows-latest" ]; then
+              powershell -Command "Compress-Archive -Path '${{ matrix.platform }}-${{ matrix.arch }}' -DestinationPath 'nen-${{ steps.version.outputs.VERSION }}-${{ matrix.platform }}-${{ matrix.arch }}.zip' -Force"
+            else
+              zip -r nen-${{ steps.version.outputs.VERSION }}-${{ matrix.platform }}-${{ matrix.arch }}.zip ${{ matrix.platform }}-${{ matrix.arch }}
+            fi
           else
             tar -czf nen-${{ steps.version.outputs.VERSION }}-${{ matrix.platform }}-${{ matrix.arch }}.tar.gz ${{ matrix.platform }}-${{ matrix.arch }}
           fi
