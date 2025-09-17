@@ -39,6 +39,10 @@ jobs:
             arch: x86_64
             archive: zip
 
+    defaults:
+      run:
+        shell: bash
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
